@@ -1,32 +1,29 @@
-# React + TypeScript + Vite
+# Construye la Torre
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Prototipo phygital para el curso de Interacción Socio Tecnológica.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 18+
+- Docker Desktop (solo para desarrollo local de la base de datos)
+- Una cuenta de Supabase (para el proyecto en la nube, no para desarrollo local)
 
-## React Compiler
+## Desarrollo local
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npx supabase start   # levanta Postgres local en Docker
+cp .env.example .env # completar con la URL/anon key que imprime supabase start
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Tests
+
+```bash
+npm test
+```
+
+## Esquema de base de datos
+
+Ver `docs/superpowers/specs/2026-09-09-construye-la-torre-arquitectura-design.md`
+para el diseño completo. Las migraciones viven en `supabase/migrations/`.
