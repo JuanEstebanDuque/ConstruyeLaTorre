@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { crearPartida } from '../lib/game'
+import Hexagons from '../components/Hexagons'
 
 export default function CreateGame() {
   const navigate = useNavigate()
@@ -26,6 +27,8 @@ export default function CreateGame() {
 
   return (
     <div className="page" style={{ gap: 32 }}>
+      <Hexagons corner="tr" />
+
       <div>
         <button className="back-btn" onClick={() => navigate('/')}>
           ← Volver
@@ -61,13 +64,14 @@ export default function CreateGame() {
 
         {error && <p className="error-msg">{error}</p>}
 
-        <button
-          className="btn btn-primary"
-          type="submit"
-          disabled={cargando || !nombre.trim()}
-        >
-          {cargando ? 'Creando...' : 'Crear partida'}
-        </button>
+        <div className="pill-row">
+          <button className="btn btn-primary" type="submit" disabled={cargando || !nombre.trim()}>
+            {cargando ? 'Creando...' : 'Crear partida'}
+          </button>
+          <button className="btn-arrow" type="submit" disabled={cargando || !nombre.trim()} aria-hidden tabIndex={-1}>
+            →
+          </button>
+        </div>
       </form>
     </div>
   )

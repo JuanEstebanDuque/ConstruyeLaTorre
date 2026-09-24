@@ -40,57 +40,46 @@ export const ROL_INFO: Record<
   {
     titulo: string
     color: string
+    imagen: string
     resumen: string
-    veEn: string[]
-    responsabilidad: string
+    informacion: string
+    funcion: string
   }
 > = {
   arquitecto: {
     titulo: 'Arquitecto',
-    color: '#818cf8',
+    color: '#669524',
+    imagen: '/RolArquitecto.png',
     resumen: 'Tienes la vista frontal de la torre: alturas y niveles.',
-    veEn: [
-      'Disposición vertical de las piezas',
-      'Altura total de cada nivel',
-      'Posición frontal de cada bloque',
-    ],
-    responsabilidad:
-      'Describe la estructura general para que el Constructor entienda la forma que debe tener la torre.',
+    informacion: 'Vista frontal de la torre, distribución general y alturas de los niveles.',
+    funcion:
+      'Interpreta la forma general de la estructura y orienta al equipo sobre cómo debería verse la torre.',
   },
   explorador_estructura: {
     titulo: 'Explorador de Estructura',
-    color: '#34d399',
+    color: '#3ee589',
+    imagen: '/RolExploradorEstructura.png',
     resumen: 'Tienes la vista lateral y superior: cómo se conectan las piezas.',
-    veEn: [
-      'Vista lateral y cenital de la torre',
-      'Relaciones entre piezas y puntos de apoyo',
-      'Zonas de equilibrio y tensión',
-    ],
-    responsabilidad:
-      'Comunica la distribución espacial para garantizar que la torre sea estable.',
+    informacion: 'Vista lateral o superior de la torre, y relación, orientación y conexión entre piezas.',
+    funcion:
+      'Ayuda al equipo a determinar cómo deben ubicarse y orientarse las piezas dentro de la estructura.',
   },
   explorador_materiales: {
     titulo: 'Explorador de Materiales',
-    color: '#fb923c',
+    color: '#a47b12',
+    imagen: '/RolExploradorMateriales.png',
     resumen: 'Conoces los códigos y características de cada pieza.',
-    veEn: [
-      'Código identificador de cada pieza',
-      'Peso, tamaño y tipo de material',
-      'Restricciones de uso de las piezas',
-    ],
-    responsabilidad:
-      'Indica qué piezas usar, cuáles son compatibles y cuáles tienen restricciones.',
+    informacion: 'Códigos, características e información de las piezas necesarias para la construcción.',
+    funcion:
+      'Identifica qué piezas deben utilizarse y orienta al equipo cuando aparezcan cambios o restricciones.',
   },
   constructor: {
     titulo: 'Constructor',
-    color: '#f87171',
+    color: '#245329',
+    imagen: '/RolConstructor.png',
     resumen: 'No tienes plano. Eres el único que puede tocar las piezas físicas.',
-    veEn: [
-      'Las instrucciones de tus compañeros',
-      'Las piezas físicas reales frente a ti',
-      'Tu propia interpretación del diseño',
-    ],
-    responsabilidad:
-      'Escucha, coordina la información de los tres exploradores y construye la torre.',
+    informacion: 'No tienes acceso al plano completo, solo a las instrucciones para ejecutar la construcción.',
+    funcion:
+      'Es el único autorizado para manipular y colocar las piezas físicas, siguiendo las indicaciones del equipo.',
   },
 }

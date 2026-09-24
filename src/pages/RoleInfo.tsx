@@ -2,12 +2,9 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { obtenerSesion } from '../lib/game'
 import { ROL_INFO } from '../types/game'
-
-const REGLAS_COMUNICACION = [
-  'Solo comunicación verbal — nunca mostrar la pantalla a otros',
-  'No intercambiar dispositivos ni tomar capturas de pantalla',
-  'Solo el Constructor puede manipular las piezas físicas',
-]
+import Hexagons from '../components/Hexagons'
+import InfoCard from '../components/InfoCard'
+import SectionDivider from '../components/SectionDivider'
 
 export default function RoleInfo() {
   const navigate = useNavigate()
@@ -24,78 +21,45 @@ export default function RoleInfo() {
   const info = ROL_INFO[sesion.rol]
 
   return (
-    <div className="page" style={{ gap: 28 }}>
-      {/* Role header */}
-      <div
-        className="role-header"
-        style={{
-          background: `${info.color}18`,
-          border: `1px solid ${info.color}40`,
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            padding: '6px 16px',
-            borderRadius: 8,
-            background: `${info.color}25`,
-            color: info.color,
-            fontSize: 12,
-            fontWeight: 700,
-            letterSpacing: 1,
-            textTransform: 'uppercase',
-            marginBottom: 16,
-          }}
-        >
-          Tu rol
+    <div className="page" style={{ gap: 24 }}>
+      <div style={{ textAlign: 'center' }}>
+        <h3 style={{ fontWeight: 400, textTransform: 'uppercase', color: 'var(--text)' }}>
+          Tu rol es...
+        </h3>
+      </div>
+
+      <div className="role-portrait">
+        <Hexagons corner="tr" style={{ top: -10, right: -10 }} />
+        <img className="role-portrait__bg" src="/FondoRol.png" alt="" aria-hidden />
+        <img className="role-portrait__char" src={info.imagen} alt={info.titulo} />
+      </div>
+
+      <h1 style={{ textAlign: 'center', fontSize: 26 }}>{info.titulo.toUpperCase()}</h1>
+
+      <SectionDivider />
+
+      <InfoCard icon="/InformacionRol.png" title="Información" variant="soft">
+        {info.informacion}
+      </InfoCard>
+
+      <InfoCard icon="/TuFuncionRol.png" title="Tu función" variant="strong">
+        {info.funcion}
+      </InfoCard>
+
+      <InfoCard icon="/RecuerdaRol.png" title="Recuerda" variant="white">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span>✗ No muestres tu pantalla</span>
+          <span>✗ No puedes tocar piezas</span>
+          <span>✓ Comunica verbalmente</span>
         </div>
-        <h1 style={{ color: info.color, marginBottom: 10 }}>{info.titulo}</h1>
-        <p style={{ fontSize: 16, color: 'var(--text-h)', lineHeight: 1.5 }}>{info.resumen}</p>
-      </div>
+      </InfoCard>
 
-      {/* Qué ves */}
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <h3>Lo que ves cada ronda</h3>
-        <ul className="info-list">
-          {info.veEn.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Responsabilidad */}
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <h3>Tu responsabilidad</h3>
-        <p style={{ fontSize: 15, color: 'var(--text-h)', lineHeight: 1.5 }}>
-          {info.responsabilidad}
-        </p>
-      </div>
-
-      {/* Reglas de comunicación */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <h3>Reglas de comunicación</h3>
-        <div className="card" style={{ padding: '8px 20px' }}>
-          {REGLAS_COMUNICACION.map((regla) => (
-            <div key={regla} className="rule-item">
-              <span className="rule-x">✕</span>
-              <span style={{ color: 'var(--text-h)', fontSize: 14 }}>{regla}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div style={{ marginTop: 'auto', textAlign: 'center' }}>
-        <p style={{ fontSize: 14, marginBottom: 16 }}>
-          La partida comenzará cuando el Arquitecto dé la señal. ¡Prepárate!
-        </p>
-        <button
-          className="btn btn-ghost"
-          onClick={() => {
-            navigate(`/lobby/${sesion.partidaId}`)
-          }}
-        >
-          Volver al lobby
+      <div style={{ marginTop: 'auto', paddingTop: 12 }} className="pill-row">
+        <button className="btn btn-primary" onClick={() => navigate('/validacion')}>
+          Entendido
+        </button>
+        <button className="btn-arrow" onClick={() => navigate('/validacion')} aria-hidden tabIndex={-1}>
+          →
         </button>
       </div>
     </div>
