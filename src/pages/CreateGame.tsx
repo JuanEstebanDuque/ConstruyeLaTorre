@@ -38,8 +38,8 @@ export default function CreateGame() {
       <div>
         <h1 style={{ marginBottom: 8 }}>Nueva partida</h1>
         <p style={{ fontSize: 15 }}>
-          Vas a ser el <strong style={{ color: 'var(--text-h)' }}>Arquitecto</strong>. Comparte el
-          código con tus compañeros para que se unan.
+          Comparte el código con tus compañeros para que se unan. Los roles se asignan al azar
+          cuando inicies la partida.
         </p>
       </div>
 

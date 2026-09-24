@@ -27,3 +27,6 @@ dist-ssr
 supabase/.temp
 supabase/.branches
 .env
+
+.claude
+.claude/

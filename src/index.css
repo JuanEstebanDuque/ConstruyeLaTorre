@@ -637,3 +637,495 @@ strong {
   background: linear-gradient(to bottom, transparent, rgba(62, 229, 137, 0.35), transparent);
   animation: scan-sweep 1.8s ease-in-out infinite;
 }
+
+/* ── Rol: personaje ───────────────────────────── */
+
+.role-character {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--olive-deep);
+}
+
+@keyframes reveal-pulse {
+  0%, 100% { transform: scale(0.94); opacity: 0.45; }
+  50% { transform: scale(1.04); opacity: 0.65; }
+}
+
+@keyframes reveal-in {
+  from { transform: translateY(24px) scale(0.85); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ── Revelación (información privada del rol) ─── */
+
+.reveal-kicker {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--olive-deep);
+}
+
+.reveal-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 20px;
+  background: var(--paper);
+  border: 1.5px solid var(--olive);
+  border-radius: 24px;
+  box-shadow: 0 6px 10px -6px rgba(44, 42, 28, 0.25);
+  animation: reveal-in 0.45s ease-out both;
+}
+
+.reveal-panel__title {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--green);
+}
+
+.reveal-panel__figure {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.reveal-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.reveal-list--bullets li::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: var(--olive-deep);
+  vertical-align: 2px;
+}
+
+.reveal-views {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 12px;
+}
+
+.reveal-views figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.reveal-views figcaption {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.reveal-views__sep {
+  align-self: stretch;
+  width: 1.5px;
+  background: var(--olive);
+}
+
+.reveal-pieces {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reveal-pieces__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.warning-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: var(--lime-pale);
+  border: 1.5px solid var(--olive);
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* ── Pantallas de juego por rol ───────────────── */
+
+.plan-card {
+  background: #fff;
+  border: 1.5px solid var(--cream-deep);
+  border-radius: 22px;
+  box-shadow: 0 6px 10px -4px rgba(44, 42, 28, 0.25);
+  min-height: 190px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.plan-card--lost {
+  background: var(--cream);
+  border-style: dashed;
+  color: var(--text-soft);
+}
+
+.data-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: -8px;
+}
+
+.data-subtitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--olive-deep);
+}
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.data-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 20px;
+  background: var(--lime-pale);
+  border: 1.5px solid var(--olive);
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+.data-row--tall {
+  padding: 12px 20px 12px 14px;
+}
+
+.data-row__sep {
+  color: var(--text-soft);
+}
+
+.code-chip {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--olive-deep);
+  background: var(--cream);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.top-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 14px;
+  width: min(200px, 70%);
+  aspect-ratio: 1;
+  background: var(--cream);
+  border: 1.5px solid var(--green);
+}
+
+.top-grid__cell {
+  background: var(--lime-pale);
+  border: 1.5px solid var(--green);
+}
+
+.top-grid__cell.is-filled {
+  background: var(--olive-deep);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 26px;
+  border-radius: 18px;
+  background: var(--green);
+  border: 1.5px solid var(--olive);
+  color: var(--lime-pale);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.status-inline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.event-card .info-card {
+  border: 2px solid var(--gold);
+  animation: reveal-in 0.5s ease-out both;
+}
+
+/* ── Validación del Constructor ───────────────── */
+
+.scan-frame--short {
+  aspect-ratio: 16 / 9;
+}
+
+.yes-no {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.yes-no__btn {
+  min-width: 48px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--cream-deep);
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.yes-no__btn.is-yes {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--lime);
+}
+
+.yes-no__btn.is-no {
+  background: var(--error);
+  border-color: var(--error);
+  color: var(--paper);
+}
+
+.check-row {
+  gap: 12px;
+}
+
+/* ── Espera (sincronización con el Constructor) ── */
+
+.wait-orbit {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wait-orbit__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px dashed var(--olive);
+  animation: spin 12s linear infinite;
+}
+
+.wait-orbit__char {
+  position: relative;
+  height: 80%;
+  object-fit: contain;
+  animation: wait-float 3s ease-in-out infinite;
+}
+
+@keyframes wait-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ── Resultado / final ────────────────────────── */
+
+.img-apagada {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.loss-note {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 20px;
+  border-radius: 20px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--text);
+  font-size: 15px;
+  text-align: left;
+}
+
+.final-title {
+  font-size: 38px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background: var(--paper);
+  border: 1.5px solid var(--cream-deep);
+  border-radius: 999px;
+  text-align: left;
+}
+
+.rank-row.is-first {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--paper);
+}
+
+.rank-row__pos {
+  width: 26px;
+  display: flex;
+  justify-content: center;
+  font-weight: 900;
+  color: var(--olive-deep);
+}
+
+.rank-row__name {
+  flex: 1;
+  font-weight: 800;
+}
+
+.rank-row__pts {
+  font-weight: 900;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* ── Aporte del equipo (voto) ─────────────────── */
+
+.vote-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vote-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background: var(--paper);
+  text-align: left;
+  font-family: var(--sans);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.vote-option:hover:not(:disabled) {
+  border-color: var(--olive);
+}
+
+.vote-option.is-selected {
+  background: var(--lime-pale);
+  border-color: var(--green);
+}
+
+.vote-option__radio {
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-option.is-selected .vote-option__radio::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.vote-option__name {
+  display: block;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.vote-option__role {
+  display: block;
+  font-size: 14px;
+  color: var(--text-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-panel,
+  .wait-orbit__ring,
+  .wait-orbit__char,
+  .event-card .info-card {
+    animation: none;
+  }
+}
+
+/* ── Fases sincronizadas ───────────────────────── */
+
+.phase-note {
+  font-size: 14px;
+  text-align: center;
+  color: var(--text-soft);
+}
+
+.status-pill {
+  text-align: left;
+}
+
+.ready-meter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.ready-meter__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.ready-meter__dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--olive-deep);
+  transition: background 0.2s;
+}
+
+.ready-meter__dots span.is-on {
+  background: var(--olive-deep);
+}

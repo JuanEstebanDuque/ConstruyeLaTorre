@@ -1,144 +1,187 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { obtenerSesion } from '../lib/game'
+import { validarRonda } from '../lib/game'
+import { segundosRestantes, useEstadoRonda, useNumeroRonda } from '../lib/hooks'
+import { TIEMPO_CONSTRUCCION_SEG, TOTAL_RONDAS } from '../types/game'
 import RoundHeader from '../components/RoundHeader'
+import PantallaCargando from '../components/PantallaCargando'
 
-const TIEMPO_RONDA_SEG = 180
+type Respuesta = boolean | null
 
-type Fase = 'lista' | 'validando' | 'resultado'
-
-type Condicion = {
-  etiqueta: string
-  cumplida: boolean
-}
-
+/** Solo el Constructor. Es su pantalla intermedia: los demás esperan su resultado. */
 export default function Validacion() {
   const navigate = useNavigate()
-  const sesion = obtenerSesion()
+  const numero = useNumeroRonda()
+  const { estado, error } = useEstadoRonda(numero)
 
-  const [fase, setFase] = useState<Fase>('lista')
-  const [segundosRestantes, setSegundosRestantes] = useState(TIEMPO_RONDA_SEG)
+  // El reloj se detiene al entrar a validar: eso define "dentro del tiempo".
+  // `estado` se carga una sola vez, así que el valor queda congelado.
+  const restantes = useMemo(
+    () =>
+      estado ? segundosRestantes(estado.ronda.juego_inicio, TIEMPO_CONSTRUCCION_SEG) : TIEMPO_CONSTRUCCION_SEG,
+    [estado],
+  )
+  const [correcta, setCorrecta] = useState<Respuesta>(null)
+  const [estable, setEstable] = useState<Respuesta>(null)
+  const [eventoOk, setEventoOk] = useState<Respuesta>(null)
+  const [validando, setValidando] = useState(false)
+  const [errorEnvio, setErrorEnvio] = useState('')
 
   useEffect(() => {
-    if (!sesion) {
-      navigate('/', { replace: true })
+    if (!estado) return
+    if (estado.miRol !== 'constructor') {
+      navigate(`/r/${numero}/espera`, { replace: true })
+    } else if (estado.ronda.validada_en) {
+      navigate(`/r/${numero}/resultado`, { replace: true })
     }
-  }, [sesion, navigate])
+  }, [estado, numero, navigate])
 
-  useEffect(() => {
-    if (fase !== 'lista') return
-    const intervalo = setInterval(() => {
-      setSegundosRestantes((s) => Math.max(0, s - 1))
-    }, 1000)
-    return () => clearInterval(intervalo)
-  }, [fase])
+  if (!estado) return <PantallaCargando error={error} />
 
-  if (!sesion) return null
+  const hayEvento = !!estado.ronda.evento_tipo
+  const dentroTiempo = restantes > 0
+  const completo = correcta !== null && estable !== null && (!hayEvento || eventoOk !== null)
 
-  function validarConstruccion() {
-    setFase('validando')
-    setTimeout(() => setFase('resultado'), 1800)
-  }
-
-  const condiciones: Condicion[] = [
-    { etiqueta: 'Torre correcta', cumplida: true },
-    { etiqueta: 'Torre estable', cumplida: true },
-    { etiqueta: 'Evento cumplido', cumplida: true },
-    { etiqueta: 'Dentro del tiempo', cumplida: segundosRestantes > 0 },
-  ]
-  const rondaSuperada = condiciones.every((c) => c.cumplida)
-
-  if (fase === 'resultado') {
-    return (
-      <div className="page page--vivid" style={{ gap: 24, alignItems: 'center', textAlign: 'center' }}>
-        <h1 style={{ marginTop: 12 }}>{rondaSuperada ? 'Ronda superada' : 'Ronda no superada'}</h1>
-
-        <img
-          src="/ImagenRondaSuperada.png"
-          alt=""
-          aria-hidden
-          style={{ width: 220, height: 220, objectFit: 'contain' }}
-        />
-
-        <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--green)' }}>
-          {rondaSuperada ? '+1 PUNTO COLECTIVO' : '+0 PUNTOS COLECTIVOS'}
-        </p>
-
-        <div className="team-score" style={{ width: '100%' }}>
-          <span>Marcador del equipo</span>
-          <span className="team-score__value">{rondaSuperada ? '1' : '0'}/3</span>
-        </div>
-
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {condiciones.map((c) => (
-            <div key={c.etiqueta} className="check-row">
-              <span>{c.etiqueta}</span>
-              <span className={`check-row__mark ${c.cumplida ? 'is-ok' : 'is-fail'}`}>
-                {c.cumplida ? '✓' : '✗'}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="pill-row" style={{ width: '100%', marginTop: 'auto', paddingTop: 12 }}>
-          <button className="btn btn-primary" onClick={() => navigate('/aporte')}>
-            Continuar
-          </button>
-          <button className="btn-arrow" onClick={() => navigate('/aporte')} aria-hidden tabIndex={-1}>
-            →
-          </button>
-        </div>
-      </div>
-    )
+  async function validar() {
+    if (!estado || !completo) return
+    setValidando(true)
+    setErrorEnvio('')
+    try {
+      await Promise.all([
+        validarRonda(estado.ronda.id, {
+          torreCorrecta: !!correcta,
+          torreEstable: !!estable,
+          eventoCumplido: hayEvento ? !!eventoOk : true,
+          dentroTiempo,
+        }),
+        new Promise((r) => setTimeout(r, 1800)), // deja ver el escaneo
+      ])
+      navigate(`/r/${numero}/resultado`, { replace: true })
+    } catch (err) {
+      setErrorEnvio(err instanceof Error ? err.message : 'No se pudo validar')
+      setValidando(false)
+    }
   }
 
   return (
-    <div className="page" style={{ gap: 24 }}>
+    <div className="page" style={{ gap: 22 }}>
       <RoundHeader
-        ronda={1}
-        totalRondas={3}
-        segundosRestantes={segundosRestantes}
-        segundosTotales={TIEMPO_RONDA_SEG}
+        ronda={numero}
+        totalRondas={TOTAL_RONDAS}
+        segundosRestantes={restantes}
+        segundosTotales={TIEMPO_CONSTRUCCION_SEG}
       />
 
       <div style={{ textAlign: 'center' }}>
         <h1>Validación</h1>
         <p style={{ fontSize: 15, marginTop: 6 }}>
-          {fase === 'validando'
+          {validando
             ? 'Verificando piezas, estabilidad y condiciones activas...'
-            : 'Ubica la torre dentro del área de validación y confirma cuando esté lista.'}
+            : 'Revisa la torre con tu equipo y responde antes de validar.'}
         </p>
       </div>
 
-      <div className="scan-frame">
+      <div className="scan-frame scan-frame--short">
         <span className="scan-frame__corner scan-frame__corner--tl" />
         <span className="scan-frame__corner scan-frame__corner--tr" />
         <span className="scan-frame__corner scan-frame__corner--bl" />
         <span className="scan-frame__corner scan-frame__corner--br" />
-        {fase === 'validando' && <span className="scan-frame__sweep" />}
+        {validando && <span className="scan-frame__sweep" />}
         <span style={{ fontWeight: 800, color: 'var(--text-soft)' }}>
-          {fase === 'validando' ? 'Validando...' : 'Torre'}
+          {validando ? 'Validando...' : 'Torre'}
         </span>
       </div>
 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Pregunta
+          texto="¿La torre coincide con el plano?"
+          valor={correcta}
+          onChange={setCorrecta}
+          disabled={validando}
+        />
+        <Pregunta
+          texto="¿La torre quedó estable?"
+          valor={estable}
+          onChange={setEstable}
+          disabled={validando}
+        />
+        {hayEvento ? (
+          <Pregunta
+            texto="¿Cumplieron el evento?"
+            valor={eventoOk}
+            onChange={setEventoOk}
+            disabled={validando}
+          />
+        ) : (
+          <div className="check-row">
+            <span>
+              Evento cumplido <small style={{ color: 'var(--text-soft)' }}>(sin evento)</small>
+            </span>
+            <span className="check-row__mark is-ok">✓</span>
+          </div>
+        )}
+        <div className="check-row">
+          <span>Dentro del tiempo</span>
+          <span className={`check-row__mark ${dentroTiempo ? 'is-ok' : 'is-fail'}`}>
+            {dentroTiempo ? '✓' : '✗'}
+          </span>
+        </div>
+      </div>
+
+      {errorEnvio && <p className="error-msg">{errorEnvio}</p>}
+
       <div className="pill-row" style={{ marginTop: 'auto', paddingTop: 12 }}>
-        <button
-          className="btn btn-primary"
-          onClick={validarConstruccion}
-          disabled={fase === 'validando'}
-        >
-          {fase === 'validando' ? 'Validando...' : 'Validar construcción'}
+        <button className="btn btn-primary" onClick={validar} disabled={!completo || validando}>
+          {validando ? 'Validando...' : 'Validar construcción'}
         </button>
         <button
           className="btn-arrow"
-          onClick={validarConstruccion}
-          disabled={fase === 'validando'}
+          onClick={validar}
+          disabled={!completo || validando}
           aria-hidden
           tabIndex={-1}
         >
           →
         </button>
       </div>
+    </div>
+  )
+}
+
+function Pregunta({
+  texto,
+  valor,
+  onChange,
+  disabled,
+}: {
+  texto: string
+  valor: Respuesta
+  onChange: (v: boolean) => void
+  disabled: boolean
+}) {
+  return (
+    <div className="check-row">
+      <span>{texto}</span>
+      <span className="yes-no" role="group" aria-label={texto}>
+        <button
+          type="button"
+          className={`yes-no__btn ${valor === true ? 'is-yes' : ''}`}
+          onClick={() => onChange(true)}
+          disabled={disabled}
+          aria-pressed={valor === true}
+        >
+          Sí
+        </button>
+        <button
+          type="button"
+          className={`yes-no__btn ${valor === false ? 'is-no' : ''}`}
+          onClick={() => onChange(false)}
+          disabled={disabled}
+          aria-pressed={valor === false}
+        >
+          No
+        </button>
+      </span>
     </div>
   )
 }

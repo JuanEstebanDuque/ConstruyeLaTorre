@@ -1,43 +1,71 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { obtenerJugadores, obtenerSesion, limpiarSesion } from '../lib/game'
-import { ROL_INFO, ROLES_EN_ORDEN, type Jugador } from '../types/game'
+import {
+  iniciarPartida,
+  limpiarSesion,
+  obtenerJugadores,
+  obtenerPartida,
+  obtenerSesion,
+} from '../lib/game'
+import type { Jugador, Partida } from '../types/game'
 import Hexagons from '../components/Hexagons'
 import InfoCard from '../components/InfoCard'
 import SectionDivider from '../components/SectionDivider'
 
 const MAX_JUGADORES = 4
+// Respaldo por si se pierde un evento de Realtime (red móvil, pestaña en segundo plano)
+const INTERVALO_SONDEO_MS = 3000
 
 export default function Lobby() {
   const { partidaId } = useParams<{ partidaId: string }>()
   const navigate = useNavigate()
-  const sesion = obtenerSesion()
+  // Leer una sola vez: obtenerSesion() devuelve un objeto nuevo en cada llamada y,
+  // usado como dependencia, re-suscribía el canal Realtime en cada render.
+  const [sesion] = useState(obtenerSesion)
 
   const [jugadores, setJugadores] = useState<Jugador[]>([])
   const [cargando, setCargando] = useState(true)
   const [enviando, setEnviando] = useState(false)
-  const canalRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const [error, setError] = useState('')
+  const entrandoRef = useRef(false)
+
+  const sesionValida = !!sesion && sesion.partidaId === partidaId
 
   // Redirigir si no hay sesión válida
   useEffect(() => {
-    if (!sesion || sesion.partidaId !== partidaId) {
-      navigate('/', { replace: true })
-    }
-  }, [sesion, partidaId, navigate])
+    if (!sesionValida) navigate('/', { replace: true })
+  }, [sesionValida, navigate])
+
+  const entrarAPartida = useCallback(
+    (partida: Partida) => {
+      if (!partida.iniciada_en || entrandoRef.current) return
+      entrandoRef.current = true
+      navigate(`/r/${Math.max(1, partida.ronda_actual)}/rol`, { replace: true })
+    },
+    [navigate],
+  )
+
+  const refrescar = useCallback(async () => {
+    if (!partidaId) return
+    const [lista, partida] = await Promise.all([
+      obtenerJugadores(partidaId),
+      obtenerPartida(partidaId),
+    ])
+    setJugadores(lista)
+    entrarAPartida(partida)
+  }, [partidaId, entrarAPartida])
 
   useEffect(() => {
-    if (!partidaId || !sesion) return
+    if (!partidaId || !sesionValida) return
 
-    // Carga inicial
-    obtenerJugadores(partidaId)
-      .then(setJugadores)
+    refrescar()
       .catch(console.error)
       .finally(() => setCargando(false))
 
-    // Canal Realtime: nuevos jugadores + señal de inicio
     const canal = supabase
-      .channel(`lobby-${partidaId}`)
+      // Nombre único: supabase.channel() reutiliza canales con el mismo nombre
+      .channel(`lobby-${partidaId}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -54,31 +82,37 @@ export default function Lobby() {
           })
         },
       )
-      .on('broadcast', { event: 'iniciar' }, () => {
-        navigate('/rol', { replace: true })
-      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'partidas',
+          filter: `id=eq.${partidaId}`,
+        },
+        (payload) => entrarAPartida(payload.new as Partida),
+      )
       .subscribe()
 
-    canalRef.current = canal
+    const sondeo = setInterval(() => {
+      refrescar().catch(console.error)
+    }, INTERVALO_SONDEO_MS)
 
     return () => {
+      clearInterval(sondeo)
       supabase.removeChannel(canal)
     }
-  }, [partidaId, sesion, navigate])
+  }, [partidaId, sesionValida, refrescar, entrarAPartida])
 
   async function comenzar() {
+    if (!partidaId) return
     setEnviando(true)
+    setError('')
     try {
-      if (canalRef.current) {
-        await canalRef.current.send({
-          type: 'broadcast',
-          event: 'iniciar',
-          payload: {},
-        })
-      }
-      navigate('/rol', { replace: true })
+      await iniciarPartida(partidaId)
+      await refrescar()
     } catch (err) {
-      console.error(err)
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar la partida')
       setEnviando(false)
     }
   }
@@ -122,11 +156,10 @@ export default function Lobby() {
 
         {!cargando && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {ROLES_EN_ORDEN.map((rol) => {
-              const jugador = jugadores.find((j) => j.rol === rol)
-              const info = ROL_INFO[rol]
+            {Array.from({ length: MAX_JUGADORES }, (_, i) => {
+              const jugador = jugadores[i]
               return jugador ? (
-                <div key={rol} className="player-row">
+                <div key={jugador.id} className="player-row">
                   <span style={{ flex: 1, fontWeight: 700, color: 'var(--text)' }}>
                     {jugador.nombre}
                     {jugador.id === sesion.jugadorId && (
@@ -138,9 +171,9 @@ export default function Lobby() {
                   </span>
                 </div>
               ) : (
-                <div key={rol} className="player-slot">
+                <div key={`vacio-${i}`} className="player-slot">
                   <span style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-                    Esperando {info.titulo}...
+                    Esperando jugador...
                   </span>
                 </div>
               )
@@ -155,6 +188,7 @@ export default function Lobby() {
 
       {/* Estado / acción */}
       <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {error && <p className="error-msg">{error}</p>}
         {sesion.esHost ? (
           <>
             {!listoParaIniciar && (
@@ -185,7 +219,7 @@ export default function Lobby() {
           </>
         ) : (
           <p style={{ textAlign: 'center', fontSize: 14 }}>
-            Esperando a que el Arquitecto inicie la partida...
+            Esperando a que el creador de la sala inicie la partida...
           </p>
         )}
       </div>
