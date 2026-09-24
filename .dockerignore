@@ -1,0 +1,17 @@
+node_modules
+dist
+.git
+.claude
+docs
+
+# Variables de entorno locales — los valores de Docker se pasan como build-args
+.env
+.env.local
+.env.*.local
+
+# Supabase local state
+supabase/.temp
+supabase/seed.sql
+
+# Dev files
+*.md
