@@ -24,7 +24,7 @@ docker compose up --build
 | App | http://localhost:3000 |
 | API (Supabase) | http://localhost:8000 |
 
-La base de datos se inicializa automáticamente con las migraciones en la primera ejecución. Los datos persisten en el volumen `construye-la-torre_db-data`.
+El servicio `migrate` aplica en cada `up` las migraciones de `supabase/migrations` que falten (las ya aplicadas se saltan), así que las migraciones nuevas también llegan a una base existente. Los datos persisten en el volumen `construye-la-torre_db-data`.
 
 Para detener y eliminar contenedores:
 ```bash

@@ -104,8 +104,9 @@ services:
 # ─────────────────────────────────────────────────────────────────────────────
 # Rutas — Realtime (WebSocket)
 # ─────────────────────────────────────────────────────────────────────────────
+  # El hostname "realtime-dev..." selecciona el tenant sembrado por SEED_SELF_HOST
   - name: realtime-v1
-    url: http://realtime:4000/socket/
+    url: http://realtime-dev.supabase-realtime:4000/socket/
     routes:
       - name: realtime-v1-all
         strip_path: true

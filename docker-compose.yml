@@ -35,8 +35,31 @@ services:
       JWT_EXP: 3600
     volumes:
       - db-data:/var/lib/postgresql/data
-      # Las migraciones se aplican automáticamente en el primer arranque
-      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+      # OJO: no montar nada SOBRE /docker-entrypoint-initdb.d — ahí la imagen
+      # trae sus scripts (roles, schema auth, realtime...). Solo se agregan
+      # archivos. Las migraciones de la app las aplica el servicio `migrate`.
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+    networks:
+      - supabase-net
+
+  # ── Migraciones de la app ──────────────────────────────────────────────────
+  # Corre en cada `up` y aplica solo las migraciones pendientes de
+  # supabase/migrations (sirve también para bases que ya existían).
+  migrate:
+    image: public.ecr.aws/supabase/postgres:17.6.1.167
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    entrypoint: ["sh", "/migrate-app.sh"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ./supabase/migrations:/migrations:ro
+      - ./volumes/db/migrate-app.sh:/migrate-app.sh:ro
     networks:
       - supabase-net
 
@@ -82,8 +105,8 @@ services:
     image: public.ecr.aws/supabase/postgrest:v16.2
     restart: unless-stopped
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
       PGRST_DB_SCHEMAS: public,graphql_public
@@ -101,8 +124,8 @@ services:
     image: public.ecr.aws/supabase/realtime:v2.130.0
     restart: unless-stopped
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       PORT: 4000
       DB_HOST: db
@@ -111,16 +134,23 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: postgres
       DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
-      DB_ENC_KEY: supabaseenckey
+      # Debe tener exactamente 16 caracteres
+      DB_ENC_KEY: supabaserealtime
       API_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
-      FLY_ALLOC_ID: fly123
-      FLY_APP_NAME: realtime
+      METRICS_JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-token-with-at-least-32-characters-long}
       SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3bhZi0/oqePlzulWOLnwKMkC3CdHKSBQ==
       ERL_AFLAGS: "-proto_dist inet_tcp"
-      ENABLE_TAILSCALE: "false"
       DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      # Crea el tenant "realtime-dev"; Realtime identifica el tenant por el
+      # primer segmento del hostname, por eso el alias de red de abajo.
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
     networks:
-      - supabase-net
+      supabase-net:
+        aliases:
+          - realtime-dev.supabase-realtime
 
   # ── API Gateway (Kong) — puerto expuesto: 8000 ────────────────────────────
   kong:
