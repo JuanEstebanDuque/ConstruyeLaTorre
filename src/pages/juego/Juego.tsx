@@ -20,13 +20,10 @@ import SectionDivider from '../../components/SectionDivider'
 import InfoCard from '../../components/InfoCard'
 import EstadoPill, { IconoDestello } from '../../components/EstadoPill'
 import PantallaCargando from '../../components/PantallaCargando'
+import { estadoEvento } from '../../lib/reglas'
 import VistaArquitecto from './VistaArquitecto'
 import VistaEstructura from './VistaEstructura'
 import VistaMateriales from './VistaMateriales'
-
-/** El evento aparece cuando ha pasado este porcentaje del tiempo de construcción. */
-const EVENTO_TRAS = 0.4
-const SEGUNDOS_EVENTO = Math.round(TIEMPO_CONSTRUCCION_SEG * (1 - EVENTO_TRAS))
 
 export default function Juego() {
   const navigate = useNavigate()
@@ -55,12 +52,11 @@ export default function Juego() {
 
   if (!estado) return <PantallaCargando error={error} />
 
-  const evento = estado.evento && restantes <= SEGUNDOS_EVENTO ? estado.evento : null
-  // Segundos que le quedan al efecto del evento (silencio / plano perdido)
-  const efectoRestante = evento?.duracion
-    ? Math.max(0, evento.duracion - (SEGUNDOS_EVENTO - restantes))
-    : 0
-  const planoOculto = evento?.tipo === 'plano_perdido' && efectoRestante > 0
+  const { evento, efectoRestante, planoOculto } = estadoEvento(
+    estado.evento,
+    restantes,
+    TIEMPO_CONSTRUCCION_SEG,
+  )
 
   return (
     <div className="page" style={{ gap: 22 }}>

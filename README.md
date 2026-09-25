@@ -84,8 +84,23 @@ npm run dev       # servidor de desarrollo
 npm run build     # build de producción → dist/
 npm run preview   # previsualizar el build local
 npm run lint      # linter (oxlint)
-npm test          # tests (vitest)
+npm test                  # todas las pruebas (unitarias + integración)
+npm run test:unit         # solo unitarias (no necesitan backend)
+npm run test:integracion  # reglas del servidor contra docker compose
 ```
+
+### Pruebas
+
+- **Unitarias** (`src/**/*.test.ts[x]`): reglas que se calculan en el cliente
+  (`src/lib/reglas.ts`: victoria, rondas perdidas, ranking con empates,
+  visibilidad de eventos), reloj sincronizado, sesión local y los dibujos de
+  los planos.
+- **Integración** (`tests/integracion/`): las reglas que viven en Postgres
+  (unirse, iniciar, roles sin repetir, privacidad por RLS, fases
+  sincronizadas, validación del Constructor, votos y ranking). Corren contra
+  `docker compose up` (`localhost:8000`); si no hay backend, se saltan. Para
+  apuntar a otro Supabase: `INTEGRACION_SUPABASE_URL` e
+  `INTEGRACION_SUPABASE_ANON_KEY`.
 
 ---
 

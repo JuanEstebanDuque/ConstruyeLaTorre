@@ -4,11 +4,7 @@ import { obtenerRondas } from '../lib/game'
 import { useEstadoRonda, useNumeroRonda } from '../lib/hooks'
 import { CONDICIONES_MINIMAS, TOTAL_RONDAS, type Ronda } from '../types/game'
 import PantallaCargando from '../components/PantallaCargando'
-
-function listar(numeros: number[]): string {
-  if (numeros.length <= 1) return numeros.join('')
-  return `${numeros.slice(0, -1).join(', ')} y ${numeros[numeros.length - 1]}`
-}
+import { listarNumeros, rondasPerdidasAntes } from '../lib/reglas'
 
 export default function Resultado() {
   const navigate = useNavigate()
@@ -40,9 +36,7 @@ export default function Resultado() {
     { etiqueta: 'Evento cumplido', ok: !!ronda.evento_cumplido },
     { etiqueta: 'Dentro del tiempo', ok: !!ronda.dentro_tiempo },
   ]
-  const perdidasAntes = rondas
-    .filter((r) => r.numero < numero && r.validada_en && !r.superada)
-    .map((r) => r.numero)
+  const perdidasAntes = rondasPerdidasAntes(rondas, numero)
 
   const continuar = () => navigate(`/r/${numero}/aporte`, { replace: true })
 
@@ -83,7 +77,7 @@ export default function Resultado() {
           {perdidasAntes.length > 0 && (
             <p>
               {perdidasAntes.length === 1 ? 'Ronda perdida' : 'Rondas perdidas'} antes:{' '}
-              <strong>{listar(perdidasAntes)}</strong>
+              <strong>{listarNumeros(perdidasAntes)}</strong>
             </p>
           )}
         </div>

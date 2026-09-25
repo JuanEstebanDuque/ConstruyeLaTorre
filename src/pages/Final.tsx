@@ -8,6 +8,7 @@ import {
   type PuestoRanking,
 } from '../lib/game'
 import { INTERVALO_SONDEO_MS, useSesion } from '../lib/hooks'
+import { puestos, resumenPartida } from '../lib/reglas'
 import { RONDAS_PARA_GANAR, TOTAL_RONDAS, type Ronda } from '../types/game'
 import Hexagons from '../components/Hexagons'
 import PantallaCargando from '../components/PantallaCargando'
@@ -57,9 +58,8 @@ export default function Final() {
 
   if (!rondas) return <PantallaCargando error={error} />
 
-  const superadas = rondas.filter((r) => r.superada).length
-  const perdidas = rondas.filter((r) => r.validada_en && !r.superada).map((r) => r.numero)
-  const victoria = superadas >= RONDAS_PARA_GANAR
+  const { superadas, perdidas, victoria } = resumenPartida(rondas)
+  const puestosRanking = puestos(ranking.map((p) => p.puntos))
   const faltanVotos = TOTAL_JUGADORES - votosFinales
 
   function salir() {
@@ -105,8 +105,8 @@ export default function Final() {
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h3 style={{ textAlign: 'left', color: 'var(--text)' }}>Puntos de aporte</h3>
-        {ranking.map((p) => {
-          const puesto = ranking.findIndex((q) => q.puntos === p.puntos) + 1
+        {ranking.map((p, i) => {
+          const puesto = puestosRanking[i]
           return (
             <div
               key={p.jugador_id}
