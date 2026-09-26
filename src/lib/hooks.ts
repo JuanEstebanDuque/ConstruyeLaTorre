@@ -4,9 +4,11 @@ import { supabase } from './supabaseClient'
 import {
   contarListos,
   horaServidor,
+  limpiarSesion,
   obtenerEstadoRonda,
   obtenerRonda,
   obtenerSesion,
+  partidaExiste,
   type EstadoRonda,
 } from './game'
 import type { Ronda } from '../types/game'
@@ -28,6 +30,43 @@ export function useSesion() {
   }, [sesion, navigate])
 
   return sesion
+}
+
+const INTERVALO_VIGENCIA_MS = 5000
+
+export const AVISO_PARTIDA_EXPIRADA = 'partida-expirada'
+
+/**
+ * Montado una vez en App: si la partida de la sesión ya no existe (la borró
+ * la limpieza por inactividad), limpia la sesión y vuelve al inicio. Lee la
+ * sesión en cada revisión porque cambia al crear o unirse a otra partida.
+ */
+export function usePartidaVigente() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    let activo = true
+
+    const revisar = () => {
+      const sesion = obtenerSesion()
+      if (!sesion) return
+      partidaExiste(sesion.partidaId)
+        .then((existe) => {
+          // Solo si la sesión sigue siendo la misma que se revisó
+          if (!activo || existe || obtenerSesion()?.partidaId !== sesion.partidaId) return
+          limpiarSesion()
+          navigate('/', { replace: true, state: { aviso: AVISO_PARTIDA_EXPIRADA } })
+        })
+        .catch(console.error)
+    }
+    revisar()
+    const intervalo = setInterval(revisar, INTERVALO_VIGENCIA_MS)
+
+    return () => {
+      activo = false
+      clearInterval(intervalo)
+    }
+  }, [navigate])
 }
 
 /** Número de ronda desde la URL (/r/:numero/...) */

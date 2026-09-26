@@ -12,10 +12,18 @@ import Espera from './pages/Espera'
 import Resultado from './pages/Resultado'
 import AporteEquipo from './pages/AporteEquipo'
 import Final from './pages/Final'
+import { usePartidaVigente } from './lib/hooks'
+
+/** Devuelve al inicio a quien siga en una partida que borró la limpieza por inactividad. */
+function VigilantePartida() {
+  usePartidaVigente()
+  return null
+}
 
 export default function App() {
   return (
     <BrowserRouter>
+      <VigilantePartida />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/crear" element={<CreateGame />} />

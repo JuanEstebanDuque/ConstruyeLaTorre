@@ -134,6 +134,21 @@ export async function obtenerPartida(partidaId: string): Promise<Partida> {
   return data
 }
 
+/**
+ * false solo si la partida ya no existe (la borró la limpieza por inactividad).
+ * Un fallo de red lanza error, para no sacar a nadie de una partida viva.
+ */
+export async function partidaExiste(partidaId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('partidas')
+    .select('id')
+    .eq('id', partidaId)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return data !== null
+}
+
 /** Solo el creador. Crea la ronda 1 con roles al azar y marca la partida como iniciada. */
 export async function iniciarPartida(partidaId: string): Promise<void> {
   const { error } = await supabase.rpc('iniciar_partida', { p_partida_id: partidaId })

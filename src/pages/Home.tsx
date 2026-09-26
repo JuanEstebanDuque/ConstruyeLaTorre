@@ -1,9 +1,13 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { obtenerSesion } from '../lib/game'
+import { AVISO_PARTIDA_EXPIRADA } from '../lib/hooks'
 
 export default function Home() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const partidaExpirada =
+    (location.state as { aviso?: string } | null)?.aviso === AVISO_PARTIDA_EXPIRADA
 
   useEffect(() => {
     const sesion = obtenerSesion()
@@ -23,6 +27,16 @@ export default function Home() {
         />
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {partidaExpirada && (
+            <div className="info-card info-card--white" role="status">
+              <div>
+                <div className="info-card__title">Partida expirada</div>
+                <div className="info-card__body">
+                  Se cerró tras 1 hora sin actividad. Crea una nueva o únete a otra.
+                </div>
+              </div>
+            </div>
+          )}
           <div className="pill-row">
             <button className="btn btn-primary" onClick={() => navigate('/crear')}>
               Crear partida
